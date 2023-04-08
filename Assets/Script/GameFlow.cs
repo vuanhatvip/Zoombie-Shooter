@@ -16,6 +16,51 @@ public class GameFlow : MonoBehaviour
     [SerializeField]
     private GameObject m_player;
 
+    [Tooltip("Zombie GameObject")]
+    [SerializeField]
+    private GameObject m_zombie;
+
+    [Tooltip("List of Pausable Object")]
+    [SerializeField]
+    private List<GameObject> pausableObjects;
+
+    private void OnValidate()
+    {
+        for (int i = pausableObjects.Count - 1; i >= 0; i--)
+        {
+            if (
+                pausableObjects[i] == null
+                || !pausableObjects[i].TryGetComponent<IPausable>(out var _)
+            )
+            {
+                pausableObjects.RemoveAt(i);
+                continue;
+            }
+        }
+    }
+
+    private void Start() => PauseGame();
+
+    [ContextMenu("Pause Game")]
+    public void PauseGame()
+    {
+        for (int i = 0; i < pausableObjects.Count; i++)
+        {
+            var pausable = pausableObjects[i].GetComponent<IPausable>();
+            pausable.Pause();
+        }
+    }
+
+    [ContextMenu("Resume Game")]
+    public void ResumeGame()
+    {
+        for (int i = 0; i < pausableObjects.Count; i++)
+        {
+            var pausable = pausableObjects[i].GetComponent<IPausable>();
+            pausable.Resume();
+        }
+    }
+
     public void GameFlow_GameOver()
     {
         m_gameOverPanel.SetActive(true);
@@ -27,6 +72,10 @@ public class GameFlow : MonoBehaviour
         m_gameWinPanel.SetActive(true);
         EndGame();
     }
+
+    public void AddToPausableList(GameObject pausable) => pausableObjects.Add(pausable);
+
+    public void RemoveFromPausableList(GameObject pausable) => pausableObjects.Remove(pausable);
 
     private void EndGame()
     {
